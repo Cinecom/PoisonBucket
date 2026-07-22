@@ -1,5 +1,5 @@
 ## Interface: 11200
-## Title: Poison Bucket
+## Title: |cff00ff00Poison Bucket|r |cff808080[Horyoshi]|r
 ## Notes: Rogue poison manager for WoW 1.12 -- alerts, one-click applying, creature-aware weapon swapping
 ## Author: Horyoshi
 ## Version: 1.0.0
