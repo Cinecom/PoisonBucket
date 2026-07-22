@@ -370,6 +370,7 @@ local function BootPoisonBucket()
     end
     GameTooltip:AddLine("Right-click: weapon sets", C.text3[1], C.text3[2], C.text3[3])
     GameTooltip:AddLine("Drop a poison here to rack it", C.text3[1], C.text3[2], C.text3[3])
+    GameTooltip:AddLine("Drag: move the window", C.text3[1], C.text3[2], C.text3[3])
     GameTooltip:Show()
   end
 
