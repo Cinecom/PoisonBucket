@@ -36,4 +36,4 @@ Copy the `PoisonBucket` folder into `Interface\AddOns\` and restart the client. 
 ## Notes
 
 - The rack quietly parks each racked poison on an unused action slot at the high end (120 downward) — that's what makes one-click applying work on this client. Un-racking frees the slot.
-- If you run the full [HoryUI](https://github.com/Horyoshi/0HoryUI) addon, Poison Bucket stays dormant — HoryUI ships this same module built in.
+- If you run the full [HoryUI](https://github.com/Cinecom/0HoryUI) addon, Poison Bucket stays dormant — HoryUI ships this same module built in.

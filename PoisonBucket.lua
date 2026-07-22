@@ -349,9 +349,14 @@ local function BootPoisonBucket()
         C.text2[1], C.text2[2], C.text2[3], ahi[1], ahi[2], ahi[3])
     else
       local n = charges or 0
-      local cc = (n < LOWCHARGES) and C.threat or C.text
-      GameTooltip:AddDoubleLine(label, n .. " charges",
-        C.text2[1], C.text2[2], C.text2[3], cc[1], cc[2], cc[3])
+      if n == 0 then               -- charge-less poison (Crippling): just "on"
+        GameTooltip:AddDoubleLine(label, "applied",
+          C.text2[1], C.text2[2], C.text2[3], C.text[1], C.text[2], C.text[3])
+      else
+        local cc = (n < LOWCHARGES) and C.threat or C.text
+        GameTooltip:AddDoubleLine(label, n .. " charges",
+          C.text2[1], C.text2[2], C.text2[3], cc[1], cc[2], cc[3])
+      end
     end
   end
 
@@ -388,11 +393,15 @@ local function BootPoisonBucket()
 
     -- lapse alert: a weapon with no poison, or one about to run dry. MH slot
     -- only ever holds weapons; OH is gated on OffhandHasWeapon() so a shield/
-    -- held-in-off-hand frill never nags for a poison it can't take.
+    -- held-in-off-hand frill never nags for a poison it can't take. The charge
+    -- threshold only applies when the enchant HAS charges -- charge-less
+    -- poisons (Crippling / Mind-numbing report 0) are duration-only and fine.
     local lapse = false
     if Armed() then
-      if GetInventoryItemLink("player", 16) and (not hasMH or (mhCharges or 0) < LOWCHARGES) then lapse = true end
-      if OffhandHasWeapon() and (not hasOH or (ohCharges or 0) < LOWCHARGES) then lapse = true end
+      if GetInventoryItemLink("player", 16)
+        and (not hasMH or ((mhCharges or 0) > 0 and mhCharges < LOWCHARGES)) then lapse = true end
+      if OffhandHasWeapon()
+        and (not hasOH or ((ohCharges or 0) > 0 and ohCharges < LOWCHARGES)) then lapse = true end
     end
     if lapse then StartAlert() else StopAlert() end
 
