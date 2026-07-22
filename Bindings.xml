@@ -1,0 +1,8 @@
+<Bindings>
+	<!-- display strings (BINDING_HEADER_POISONBUCKET / BINDING_NAME_...) live in PoisonBucket.lua -->
+	<Binding name="POISONBUCKET_SWAP" header="POISONBUCKET">
+		if ( PoisonBucket and PoisonBucket.Swap ) then
+			PoisonBucket.Swap();
+		end
+	</Binding>
+</Bindings>

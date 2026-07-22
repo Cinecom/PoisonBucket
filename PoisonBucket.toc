@@ -1,0 +1,9 @@
+## Interface: 11200
+## Title: Poison Bucket
+## Notes: Rogue poison manager for WoW 1.12 -- alerts, one-click applying, creature-aware weapon swapping
+## Author: Horyoshi
+## Version: 1.0.0
+## SavedVariables: PoisonBucketDB
+
+core.lua
+PoisonBucket.lua
