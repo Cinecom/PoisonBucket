@@ -308,9 +308,17 @@ local function BootPoisonBucket()
     f:SetWidth(w)
   end
 
+  -- a set counts as configured once anything is assigned to it. The whole
+  -- swap feature (button + auto-swap) stays out of the way unless BOTH sets
+  -- are configured -- a player running one weapon pair isn't swapping, so
+  -- don't bother them with a button they can't use.
+  local function SetReady(s)
+    return (s.mh or s.oh) and true or false
+  end
+
   local function UpdateSwap()
     local need = nil
-    if Armed() then
+    if Armed() and SetReady(PoisonBucketDB.poisonsets.diss) and SetReady(PoisonBucketDB.poisonsets.std) then
       local want = TargetPoisonNeed()
       local cur = CurrentPoisonClass()
       if want and cur and want ~= cur then need = want end
@@ -328,11 +336,10 @@ local function BootPoisonBucket()
         if swapNeed then SwapTip() else GameTooltip:Hide() end
       end
       -- auto-swap: ONE equip attempt per mismatch transition (never re-fired
-      -- by the 1s poll, so a missing weapon can't spam); silently skipped
-      -- while the needed set has nothing assigned
+      -- by the 1s poll, so a missing weapon can't spam); a mismatch only ever
+      -- shows when both sets are configured (the UpdateSwap gate above)
       if swapNeed and PoisonBucketDB.poisonAutoswap then
-        local s = PoisonBucketDB.poisonsets[swapNeed]
-        if s.mh or s.oh then EquipSet(swapNeed) end
+        EquipSet(swapNeed)
       end
     end
   end
