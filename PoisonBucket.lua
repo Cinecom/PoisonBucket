@@ -34,6 +34,7 @@ local function BootPoisonBucket()
   local RS = 26              -- rack / swap icon size
   local GAP = 4              -- gap between chips
   local LOWCHARGES = 10      -- alert when a poison drops below this many charges
+  local LOWTIME = 120000     -- ...or below this much remaining time (ms; 2 min)
   local PERIOD = 0.8         -- one heartbeat cycle: lub, dub, rest (fast = urgent)
   local BEAT = 0.16          -- length of a single pulse within the cycle
   local GLOWMAX = 0.35       -- peak alpha of the additive garnet wash
@@ -347,7 +348,7 @@ local function BootPoisonBucket()
   -- ==========================================================================
   -- chip tooltip + the 1s state check
   -- ==========================================================================
-  local function HandLine(label, equipped, has, charges)
+  local function HandLine(label, equipped, has, charges, exp)
     if not equipped then
       GameTooltip:AddDoubleLine(label, "no weapon",
         C.text2[1], C.text2[2], C.text2[3], C.text3[1], C.text3[2], C.text3[3])
@@ -356,14 +357,16 @@ local function BootPoisonBucket()
         C.text2[1], C.text2[2], C.text2[3], ahi[1], ahi[2], ahi[3])
     else
       local n = charges or 0
-      if n == 0 then               -- charge-less poison (Crippling): just "on"
-        GameTooltip:AddDoubleLine(label, "applied",
-          C.text2[1], C.text2[2], C.text2[3], C.text[1], C.text[2], C.text[3])
+      local timeLow = (exp or 0) < LOWTIME
+      local value
+      if n == 0 then               -- charge-less poison (Crippling): time only
+        value = math.ceil((exp or 0) / 60000) .. "m left"
       else
-        local cc = (n < LOWCHARGES) and C.threat or C.text
-        GameTooltip:AddDoubleLine(label, n .. " charges",
-          C.text2[1], C.text2[2], C.text2[3], cc[1], cc[2], cc[3])
+        value = n .. " charges"
       end
+      local cc = ((n > 0 and n < LOWCHARGES) or timeLow) and C.threat or C.text
+      GameTooltip:AddDoubleLine(label, value,
+        C.text2[1], C.text2[2], C.text2[3], cc[1], cc[2], cc[3])
     end
   end
 
@@ -372,9 +375,9 @@ local function BootPoisonBucket()
     GameTooltip:ClearLines()
     GameTooltip:AddLine("Poison Bucket", ahi[1], ahi[2], ahi[3])
     if Armed() then
-      local hasMH, _, mhCharges, hasOH, _, ohCharges = GetWeaponEnchantInfo()
-      HandLine("Main Hand", GetInventoryItemLink("player", 16), hasMH, mhCharges)
-      HandLine("Off Hand", OffhandHasWeapon(), hasOH, ohCharges)
+      local hasMH, mhExp, mhCharges, hasOH, ohExp, ohCharges = GetWeaponEnchantInfo()
+      HandLine("Main Hand", GetInventoryItemLink("player", 16), hasMH, mhCharges, mhExp)
+      HandLine("Off Hand", OffhandHasWeapon(), hasOH, ohCharges, ohExp)
       GameTooltip:AddLine("Left-click: disable", C.text3[1], C.text3[2], C.text3[3])
     else
       GameTooltip:AddLine("Disabled", C.text3[1], C.text3[2], C.text3[3])
@@ -398,17 +401,21 @@ local function BootPoisonBucket()
     lastExp[17] = ohExp or 0
     needScan = false
 
-    -- lapse alert: a weapon with no poison, or one about to run dry. MH slot
-    -- only ever holds weapons; OH is gated on OffhandHasWeapon() so a shield/
-    -- held-in-off-hand frill never nags for a poison it can't take. The charge
-    -- threshold only applies when the enchant HAS charges -- charge-less
-    -- poisons (Crippling / Mind-numbing report 0) are duration-only and fine.
+    -- lapse alert: a weapon with no poison, or one about to run dry (low
+    -- charges OR under LOWTIME remaining). MH slot only ever holds weapons;
+    -- OH is gated on OffhandHasWeapon() so a shield/held-in-off-hand frill
+    -- never nags for a poison it can't take. The charge threshold only
+    -- applies when the enchant HAS charges -- charge-less poisons (Crippling)
+    -- are duration-only, which is exactly what the time threshold covers.
+    local function HandLapse(has, charges, exp)
+      if not has then return true end
+      if (charges or 0) > 0 and charges < LOWCHARGES then return true end
+      return (exp or 0) < LOWTIME
+    end
     local lapse = false
     if Armed() then
-      if GetInventoryItemLink("player", 16)
-        and (not hasMH or ((mhCharges or 0) > 0 and mhCharges < LOWCHARGES)) then lapse = true end
-      if OffhandHasWeapon()
-        and (not hasOH or ((ohCharges or 0) > 0 and ohCharges < LOWCHARGES)) then lapse = true end
+      if GetInventoryItemLink("player", 16) and HandLapse(hasMH, mhCharges, mhExp) then lapse = true end
+      if OffhandHasWeapon() and HandLapse(hasOH, ohCharges, ohExp) then lapse = true end
     end
     if lapse then StartAlert() else StopAlert() end
 
